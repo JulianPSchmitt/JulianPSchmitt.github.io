@@ -17,8 +17,8 @@ on instructions or demonstrations contained in a prompt.
 
 The mechanisms enabling in-context learning remain poorly understood to this
 day. A possible explanation, which is actively being researched, is the ability
-of transformers to implement algorithms that extract information from the input
-prompt. In particular, recent work [[3,4,5]](#3) has shown that certain
+of transformers to implement algorithms that extract specific information from
+the input. In particular, recent work [[3,4,5]](#3) has shown that certain
 in-context learners can develop a context-dependent model within their hidden
 activations that is trained on the examples provided in the prompt.
 
@@ -51,20 +51,44 @@ $$
 
 The zero is a placeholder for the unknown value $y^{(n+1)}$ and our goal is to
 predict this label with a transformer model that is trained on this data
-distribution.
+distribution. Therefore, we need to define a loss function that measures the
+difference of the predicted label $y_{\text{pred}}^{(n+1)}$ and the true label
+$y^{(n+1)}$.  The so-called *in-context loss* is the expected squared error:
 
-An important case of $\mathcal{P}\_{Y|X}$ is when $y^{(i)} = \phi(x^{(i)})$ for
-some unknown function $\phi$. In particular, Ahn et al. [[3,4]](#3) consider
-$\phi(x) = \langle x, \theta \rangle$ for some $\theta \in \mathbb{R}^{d}$ which
-corresponds to a linear regression model.
+$$
+\begin{align}
+\mathbb{E}_{Z_0, y^{(n+1)}}
+\left[ \left( y_{\text{pred}}^{(n+1)} - y^{(n+1)} \right)^2 \right].
+\end{align}
+$$
+
+Last, its worth mentioning that an important case of $\mathcal{P}\_{Y|X}$ is
+when $y^{(i)} = \phi(x^{(i)})$ for some unknown function $\phi$. In particular,
+Ahn et al. [[3]](#3) consider $\phi(x) = \langle x, \theta \rangle$ for some
+$\theta \in \mathbb{R}^{d}$ which corresponds to a linear regression model.
 
 ## Simple Transformer Model
 
-The central component in a transformer model is the attention mechanism
-[[1]](#1). Cheng et al. [[5]](#5) define the *generalized* attention module as
+Having seen the input data setup, we now introduce the transformer architecture
+that is used to theoretically analyze in-context learning. The central component
+in a transformer model is the attention module [[1]](#1). Originally, an
+attention layer was defined as a function that maps values $V \in
+\mathbb{R}^{(d+1) \times (d+1)}$, keys $K \in \mathbb{R}^{(d+1) \times (d+1)}$
+and querys $Q \in \mathbb{R}^{(d+1) \times (d+1)}$ to an output:
 
 $$
-\operatorname{Attn}^{\hat{h}}_{V, B, C}(Z) := V Z M \tilde{h}(BX, CX),
+\operatorname{Attn}_{Q,K,V}^{smax}(Z)
+=VZ \cdot \operatorname{smax}\left(Z^\top K^\top Q Z\right).
+$$
+
+
+Cheng et al. [[5]](#5) generalize this definition to incorporate any matrix
+valued function $\tilde{h} : \mathbb{R}^{d \times (n+1)} \times \mathbb{R}^{d
+\times (n+1)} \to \mathbb{R}^{(n+1) \times (n+1)}$ instead of the softmax
+funtion. Accordingly, the *generalized* attention module is defined as
+
+$$
+\operatorname{Attn}^{\tilde{h}}_{V, B, C}(Z) := V Z M \tilde{h}(BX, CX),
 \qquad
 M := \begin{bmatrix}
 I_n & 0 \\
@@ -75,16 +99,15 @@ $$
 where $V \in \mathbb{R}^{(d+1) \times (d+1)}$, $B \in \mathbb{R}^{d \times d}$,
 $C \in \mathbb{R}^{d \times d}$ are the value, key, and query matrices. $M$ is a
 mask that reflects the asymmetric structure of the input data $Z$ that results
-from the missing label $y^{(n+1)}$. $\tilde{h} : \mathbb{R}^{d \times (n+1)}
-\times \mathbb{R}^{d \times (n+1)} \to \mathbb{R}^{(n+1) \times (n+1)}$ is a
-matrix valued function and $X = [x^{(1)}, \ldots, x^{(n+1)}] \in \mathbb{R}^{d
-\times (n+1)}$ consists of the firs $d$ rows of $Z$.
+from the missing label $y^{(n+1)}$ and $X = [x^{(1)}, \ldots, x^{(n+1)}] \in
+\mathbb{R}^{d \times (n+1)}$ consists of the firs $d$ rows of $Z$.
 
-Usually, a transformers module consists of multiple attention modules and
-feed-forward layers [[1]](#1). However, for the purpose of analyzing in-context
-learning, a *simple* $L$-layer transformer is constructed by stacking $k$
-attention modules. $Z_l$ denotes the output of the $(l-1)$-th layer and defined
-as
+Usually, a transformers module consists of multiple multi-head attention
+modules, normalization and feed-forward layers [[1]](#1). However, for the
+purpose of analyzing in-context learning, we consider a single-head
+attention only $L$-layer transformer that is constructed by stacking $L$
+attention modules. $Z_l$ denotes the output of the $(l-1)$-th layer and is
+defined as
 
 $$
 Z_l
@@ -92,20 +115,94 @@ Z_l
 = Z_{l-1} + V_l Z_{l-1} M_l \tilde{h}_l(B_l X_{l-1}, C_l X_{l-1}).
 $$
 
-Since the goal is to train this simple transformer on the data distribution of
-the input $Z_0$, we need to define a loss function that measures the difference
-of the predicted label $y_{\text{pred}}^{(n+1)}$ and the true label $y^{(n+1)}$.
-The prediction is obtained by the output of the last layer of the transformer
-and reads $y_{\text{pred}}^{(n+1)} := -[Z_L]_{(d+1), (n+1)}$. The in-context
-loss is then defined as
+This architecture is in the following referred to as *simple* transformer. The
+predicted label $y_{\text{pred}}^{(n+1)}$ is obtained by the output of the last
+layer of the transformer and reads $y_{\text{pred}}^{(n+1)} := -[Z_L]_{(d+1),
+(n+1)}$. Since the goal is to train this simple transformer on the data
+distribution of $Z_0$ and w.r.t. the in-context loss (1), we define:
 
 $$
+\begin{align*}
 f(\{V\}_{l=1}^L, \{B\}_{l=1}^L, \{C\}_{l=1}^L)
-= \mathbb{E}_{Z_0, y^{(n+1)}}
-\left[ \left( y_{\text{pred}}^{(n+1)} - y^{(n+1)} \right)^2 \right].
+&= \mathbb{E}_{Z_0, y^{(n+1)}}
+\left[\left([Z_L]_{(d+1),(n+1)} + y^{(n+1)}\right)^2\right].
+\end{align*}
 $$
 
-## Gradient Descent for Linear Transformers
+## Linear Transformers implement Gradient Descent
+
+In this section, we consider the problem of learning linear functions, i.e.
+$\phi(x) = \langle x, \theta \rangle$ with $\theta \sim \mathcal{P}\_\theta$ and
+a simple $L$-layer transformer with linear attention layers which are defined as
+follows: For
+
+<!-- In the setting of learning linear functions, i.e. $\phi(x) = \langle x, \theta
+\rangle$ with $\theta \sim \mathcal{P}\_\theta$, Oswald et al. and Ahn et al.
+[[3,4]](#3) have shown that the output generated by a forward pass of a simple
+$L$-layer transformer with linear attention modules is equivalent to $L$ steps
+of gradient descent. Linear attention layers are a special case of the
+generalized attention module: For -->
+
+$$
+Q := \begin{pmatrix}
+B & 0\\
+0 & 0
+\end{pmatrix}, \qquad
+K := \begin{pmatrix}
+C & 0\\
+0 & 0
+\end{pmatrix}
+$$
+
+we have
+
+$$
+\operatorname{Attn}^{linear}_{V_l, K_l, Q_l}(Z_{l-1})
+:= V_l Z M Z^\top K_l^\top Q_l Z.
+$$
+
+Therefore, a linear attention layer is a special case of the generalized
+attention layer and corresponds to setting the function $\tilde{h}(U,W) = U^\top
+W$. Note that an $L$-layer simple transformer with linear attention layers
+(short: linear Transformer) is not a linear model because each attention module
+is still cubic in the input. For simplicity, we reparametrize the weights and
+write only $Q_l$ for the product $Q_l^\top K_l$ in the rest of this section. The
+key result of the work by Oswald et al. and Ahn et al. [[3,4]](#3) is that the
+output generated by a linear transformer can equivalently be obtained by
+executing gradient descent on the input $Z_0$.
+
+To start, we consider the case of a single attention module, i.e. $L=1$. Ahn
+et al. [[3]](#3) have proven that for $x^{(i)} \sim \mathcal{N}(0,\Sigma)$ with
+$\Sigma = U \operatorname{diag}(\lambda_1, \ldots, \lambda_d) U^\top$ and
+$\theta \sim \mathcal{N}(0, I_n)$ the following parameters
+
+$$
+\begin{align}
+V_0 = \begin{pmatrix}
+0_{d \times d} & 0\\
+0 & 1
+\end{pmatrix}, \qquad
+Q_0 = - \begin{pmatrix}
+U \operatorname{diag}\left(\left\{
+\frac{1}{\frac{n+1}{n} \lambda_i + \frac{1}{n} \sum_k \lambda_k}
+\right\}_{i=1,\ldots,d} \right)U^\top & 0\\
+0 & 0
+\end{pmatrix}
+\end{align}
+$$
+
+are global minimizers of the in-context loss $f$. Note that this configuration
+is not unique because one can simply rescale by setting $V_ 0 \leftarrow s V_0$
+and $Q_0 \leftarrow Q_0/s$ with $s\in \mathbb{R}$. The purpose of this result is
+to demonstrate that this parameter configuration could indeed be obtained by
+training the linear transformer on the data $Z_0$ w.r.t. the in-context loss.
+Furthermore, for $\Sigma = I_d$, Oswald et al.  [[4]](#4) have shown that a
+linear transformer with the same parameters as in (2) implements one step of
+gradient descent.
+
+As the setting of a single layer and isotropic Gaussians for the input is quite
+restrictive, Ahn et al. [[3]](#3) have partially extended the results to
+multiple layers and general covariance matrices.
 
 ## References
 
