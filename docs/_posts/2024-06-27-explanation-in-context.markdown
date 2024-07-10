@@ -363,29 +363,129 @@ First, let's clarify the question: What is *functional gradient descent* or
 *gradient descent in function space*? Let $\mathbb{H}$ be a Hilbert space of
 functions $g: \mathbb{R}^d \rightarrow \mathbb{R}$ and $L(g): \mathbb{H}
 \rightarrow \mathbb{R}$ be a loss. Then, the functional gradient descent on
-$L(f)$ is defined as the sequence
+$L(g)$ is defined as the sequence
 
 $$
 g_{l+1} = g_l - \eta_l \nabla L(g_l)
 $$
 
-where $\nabla L(f) := \arg\min_{\\|g\\|\_{\mathcal{H}}=1} \left\. \frac{d}{dt}
-L(f + tg) \right\|_{t=0}$ and $\eta_l$ is the step size [[5]](#5).
+where $\nabla L(g) := \arg\min_{\\|e\\|\_{\mathcal{H}}=1} \left\. \frac{d}{dt}
+L(g + te) \right\|_{t=0}$ and $\eta_l$ is the step size [[5]](#5).
 
 In the context of kernel regression, we consider the following setup: The
 Hilbert space $\mathbb{H}$ is the reproducing kernel Hilbert space (RKHS) of the
-kernel $\mathcal{K}$ and $L(f) := \sum_{i=1}^n \left( g(x^{(i)}) - y^{(i)}
+kernel $\mathcal{K}$ and $L(g) := \sum_{i=1}^n \left( g(x^{(i)}) - y^{(i)}
 \right)^2$ is the empirical squared error of the in-context samples. Now, the
 key result of Cheng et al. [[5]](#5) is the following: Let $V_l =
-\begin{bmatrix} 0 & 0 \\\ 0 & -r_{\ell} \end{bmatrix}$, $B_l=I_d$, $C_l = I_d$
-and $\left[\tilde{h}(U,W)\right]_{ij} = \mathcal{K}(U^{(i)},W^{(j)})$ where
-$U^{(i)}, W^{(j)}$ are the $i$-th and $j$-th columns of $U$ and $W$. Then, the
-prediction $y_l^{(n+1)}$ of the $l$-th layer of the transformer matches the
-prediction of the functional gradient descent after $l$ steps:
+\begin{bmatrix} 0 & 0 \\\ 0 & -\eta_{\ell} \end{bmatrix}$, $B_l=I_d$, $C_l =
+I_d$ and $\left[\tilde{h}(U,W)\right]_{ij} = \mathcal{K}(U^{(i)},W^{(j)})$ where
+$U^{(i)}, W^{(j)}$ are the $i$-th and $j$-th columns of $U$ and $W$. Then, there
+exist stepsizes $\eta_0, \ldots, \eta_l \in \mathbb{R}$ such that the prediction
+$y_l^{(n+1)}$ of the $l$-th layer of the transformer matches the prediction of
+the functional gradient descent after $l$ steps:
 
 $$
+\begin{align}
 y_l^{(n+1)} = - g_l(x^{(n+1)}).
+\tag{6}
+\end{align}
 $$
+
+This result is remarkable because it covers a wide range of activation
+functions. Note that (6) reduces to a special case of (4) when using linear
+attention, i.e. using the euclidean inner product kernel
+$\mathcal{K}^{\text{linear}}(u,w) = \langle u, w\rangle$. In this case, the
+matrix $A_l$ in (4) corresponds to $\eta_l I_d$ and therefore does not act as a
+preconditioner. Unfortunately, result (6) does not hold for relu and softmax
+activations because $\tilde{h}^{\text{relu}}, \tilde{h}^{\text{smax}}$ are
+not kernels. Since these are the most common activation functions in practice,
+Cheng et al. [[5]](#5) still included these in their investigations.
+
+It turns out that attention modules with softmax activation can implement a
+variant of functional gradient descent with the stepsize $\eta_l$ multiplied
+with a normalizing factor $\tau(\cdot)$. This can be derived by comparing the
+behavior of the softmax attention with the one of attention based on exponential
+kernel $\mathcal{K}^{\text{smax}}(u,w) = \exp\left(\frac{\langle u,
+w\rangle}{\sigma}\right)$ where $\sigma$ is a scaling factor. The latter can be
+obtained by using $\tilde{h}^{\text{exp}}(\cdot) = \text{exp}(\cdot)$ and
+setting
+
+$$
+\begin{align*}
+V_l = \begin{pmatrix}
+0 & 0\\
+0 & -\eta_l
+\end{pmatrix}, \quad
+B_l = \frac{1}{\sigma} I_d, \quad
+C_l = \frac{1}{\sigma} I_d.
+\end{align*}
+$$
+
+The usual softmax attention module can be written as
+
+$$\operatorname{Attn}^{\text{smax}}_{V_l, B_l, C_l}(Z) = V_l Z \cdot
+\text{smax}\left(
+Z^\top
+\begin{pmatrix}
+B_l & 0\\
+0 & 0
+\end{pmatrix}^\top
+\begin{pmatrix}
+C_l & 0\\
+0 & 0
+\end{pmatrix}
+Z
+\right)
+$$
+
+where $\text{smax}(\cdot)$ denotes the masked softmax function
+
+$$
+\left[ \text{softmax}(W) \right]_{ij} =
+\begin{cases}
+\frac{\exp(W_{ij})}{\sum_{k=1}^{n} \exp(W_{kj})} & \text{for } i \ne n + 1 \\
+0 & \text{for } i = n + 1
+\end{cases}.
+$$
+
+Setting $V_l, B_l, C_l$ as above, we obtain the algorithm
+
+$$
+f_{l+1}(\cdot) = f_l(\cdot) + \eta_l \tau(\cdot) \sum_{i=1}^{n}
+\left(
+y^{(i)} - f_l(x^{(i)})
+\right)
+\mathcal{K}(\cdot, x^{(i)}),
+$$
+
+where $\tau(\cdot) := 1 / \sum_{i=1}^{n} \mathcal{K}(\cdot, x^{(j)})$ is the
+softmax normalization.
+
+Looking again at result (6), we are lacking a justification for the choice of
+parameter. In particular, we would like to know if the parameters $V_l, B_l,
+C_l$ can be learned by a transformer when being trained on the in-context loss
+(1). Similar to the result of Ahn et al. [[3]](#3) for the linear case, Cheng et
+al. [[5]](#5) have proven that these parameters form a stationary point w.r.t.
+the in-conext loss: First, assume that for a matrix $S \in \mathbb{R}^{d \times
+d}$, it holds $\tilde{h}(W, V) = \tilde{h}(S^\top W, S^{-1}V)$. Second, let
+there be a symmetric invertible matrix $\Sigma \in \mathbb{R}^{d \times d}$ such
+that for any orthogonal matrix $U$ and $X \sim \mathcal{P}\_X$ it holds
+$\Sigma^{-\frac{1}{2}} U \Sigma^{\frac{1}{2}} X \overset{d}{=} X$. Third, for
+the covariance $\mathbb{K}(X) =\mathbb{E}_{Y|X}[Y Y^\top]$ of $Y := [y^{(1)},
+\ldots, y^{(n+1)}]$ let it hold $\mathbb{K}(\Sigma^{\frac{1}{2}} U \Sigma^{-
+\frac{1}{2}}X) = \mathbb{K}(X)$. Then, there exist stationary points where $B_l
+= b_l \Sigma^{-\frac{1}{2}}$ and $C_l = c_l \Sigma^{-\frac{1}{2}}$. Setting
+$\Sigma = I_d$, we obtain the claim.
+
+The assumptions for the result above are quite strong but can be justified:
+Linear, ReLU and softmax activation all fulfill the required matrix invariance.
+Moreover, the distribution assumption on $X$ holds when choosing a normal
+distribution or a normal mixture for $\mathcal{P}\_X$. The covariance assumption
+on $Y$ is for example satisfied in the linear regression setting, i.e. $y^{(i)}
+= \langle \xi^{(i)}, \theta \rangle$ where $x^{(i)} = \Sigma^{1/2} \xi^{(i)}$
+and $\theta \sim \mathcal{N}(0, I_d)$.
+
+## Limitations and Outlook
 
 ## References
 
