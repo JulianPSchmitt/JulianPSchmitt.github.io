@@ -35,7 +35,7 @@ As a data model that makes in-context learning tractable, Oswald et al., Ahn et
 al. and Cheng et al. [[3,4,5]](#3) consider the following random instances: The
 prompt contains $n$ context tokens $z^{(i)} = (x^{(i)}, y^{(i)})^\top \in
 \mathbb{R}^{d+1}$ and a query token $z^{(n+1)} = (x^{(n+1)}, 0)^\top \in
-\mathbb{R}^{d+1}$, where $[x^{(1)},\ldots, x^{(n+1)}]$ are convariates drawn
+\mathbb{R}^{d+1}$, where $[x^{(1)},\ldots, x^{(n+1)}]$ are covariates drawn
 from a joint distribution $\mathcal{P}\_X$ and $[y^{(1)}, \ldots, y^{(n+1)}]$
 are corresponding labels drawn from joint $\mathcal{P}\_{Y|X}$. Note,
 $y^{(n+1)}$ is unobserved. In matrix notation, the problem is given by
@@ -74,13 +74,12 @@ that is used to theoretically analyze in-context learning. The central component
 in a Transformer model is the attention module [[1]](#1). Originally, Vaswani et
 al. [[1]](#1) defined an attention layer as a function that maps values $V \in
 \mathbb{R}^{(d+1) \times (d+1)}$, keys $K \in \mathbb{R}^{(d+1) \times (d+1)}$
-and querys $Q \in \mathbb{R}^{(d+1) \times (d+1)}$ to an output:
+and queries $Q \in \mathbb{R}^{(d+1) \times (d+1)}$ to an output:
 
 $$
 \operatorname{Attn}_{Q,K,V}^{smax}(Z)
 =VZ \cdot \operatorname{smax}\left(Z^\top K^\top Q Z\right).
 $$
-
 
 The softmax function serves as a nonlinear activation function. Cheng et al.
 [[5]](#5) introduce the *generalized* attention module to incorporate any matrix
@@ -97,7 +96,7 @@ I_n & 0 \\
 $$
 
 where $X = [x^{(1)}, \ldots, x^{(n+1)}] \in \mathbb{R}^{d \times (n+1)}$
-consists of the firs $d$ rows of $Z$ and $V \in \mathbb{R}^{(d+1) \times
+consists of the first $d$ rows of $Z$ and $V \in \mathbb{R}^{(d+1) \times
 (d+1)}$, $B \in \mathbb{R}^{d \times d}$, $C \in \mathbb{R}^{d \times d}$ are
 the value, key, and query matrices. $M$ acts simply as a mask that reflects the
 asymmetric structure of the input data $Z$ that results from the missing label
@@ -143,11 +142,11 @@ defined as follows: For
 
 $$
 Q_l := \begin{pmatrix}
-B_l & 0\\
+C_l & 0\\
 0 & 0
 \end{pmatrix}, \qquad
 K_l := \begin{pmatrix}
-C_l & 0\\
+B_l & 0\\
 0 & 0
 \end{pmatrix}
 $$
@@ -155,7 +154,7 @@ $$
 we have
 
 $$
-\operatorname{Attn}^{linear}_{V_l, K_l, Q_l}(Z_{l-1})
+\operatorname{Attn}^{linear}_{V_l, K_l, Q_l}(Z)
 := V_l Z M Z^\top K_l^\top Q_l Z.
 $$
 
@@ -167,7 +166,7 @@ experiments have shown that linear attention outperforms the usual softmax
 attention for solving the linear regression tasks we consider here [[4]](#4).
 The choice of the sparse weight matrices as above is a major restriction
 compared to the standard attention but will be justified later.  For simplicity,
-we reparametrize the weights and write only $Q_l$ for the product $Q_l^\top K_l$
+we reparametrize the weights and write only $Q_l$ for the product $K_l^\top Q_l$
 in the rest of this section. The key result of the work by Oswald et al. and Ahn
 et al. [[3,4]](#3) is that linear Transformers can learn to implement
 (preconditioned) gradient descent. In the following, we will explain this result
@@ -194,7 +193,7 @@ U \operatorname{diag}\left(\left\{
 \end{align}
 $$
 
-are global minimizers w.r.t. the in-context loss $f$ (1). In orther words, these
+are global minimizers w.r.t. the in-context loss $f$ (1). In other words, these
 parameters produce optimal predictions $y_{\text{pred}}^{(n+1)}$ within the
 limitations of the architecture. Note that configuration (2) is not unique
 because one can simply rescale by setting $V_ 0 \leftarrow s V_0$ and $Q_0
@@ -224,7 +223,7 @@ A_l & 0\\
 \quad
 \text{where}
 \quad
-A_l \in \mathbb{R}^{d \times d}
+A_l = - B_l^\top C_l \in \mathbb{R}^{d \times d}
 .
 \tag{3}
 \end{align}
@@ -300,7 +299,7 @@ parameter space (3) to
 $$
 \begin{align}
 V_l = \begin{pmatrix}
-B_l & 0\\
+D_l & 0\\
 0 & 1
 \end{pmatrix},
 \quad
@@ -311,7 +310,7 @@ A_l & 0\\
 \quad
 \text{where}
 \quad
-A_l, B_l \in \mathbb{R}^{d \times d}
+A_l, D_l \in \mathbb{R}^{d \times d}
 .
 \tag{5}
 \end{align}
@@ -321,23 +320,23 @@ By doing so, the Transformer gains representational power and it turns out that
 the matrices in (5) also contain a stationary point of the in-context loss (1).
 Assuming once again normal distributed data $x^{(i)} \sim \mathcal{N}(0,
 \Sigma)$, $\theta_* \sim \mathcal{N}(0, \Sigma^{-1})$ and defining the parameter
-space $\mathcal{S} := \left\\{ \\left(\\{A_l\\}\_{l=1}^L, \\{B\\}\_{l=1}^L
-\\right) \ | \ A_l = a_l \Sigma^{-1}, \ B_l = b_l I_d \ \ \forall l \right\\}$,
+space $\mathcal{S} := \left\\{ \\left(\\{A_l\\}\_{l=1}^L, \\{D\\}\_{l=1}^L
+\\right) \ | \ A_l = a_l \Sigma^{-1}, \ D_l = d_l I_d \ \ \forall l \right\\}$,
 Ahn et al. [[3]](#3) have shown that it holds:
 
 $$
-\inf_{(A,B) \in \mathcal{S}} \sum_{i=0}^{L-1}
-\left\| \nabla_{A_i} f(A, B)\right\|_F^2 +
-\left\| \nabla_{B_i} f(A, B) \right\|_F^2 = 0.
+\inf_{(A,D) \in \mathcal{S}} \sum_{i=0}^{L-1}
+\left\| \nabla_{A_i} f(A, D)\right\|_F^2 +
+\left\| \nabla_{D_i} f(A, D) \right\|_F^2 = 0.
 $$
 
 Setting the suggested parameters in the linear attention layer
 $\operatorname{Attn}^{linear}_{V_l, Q_l}(Z)$ reveals that the matrix $A_l$ still
-acts as a preconditioner, while the matrix $B_l$ is responsible for transforming
+acts as a preconditioner, while the matrix $D_l$ is responsible for transforming
 the gram matrix $XX^\top$ to improve its conditioning. In particular, the
 covariance $\Sigma = I_d$ corresponds to the GD++ algorithm that was introduced
 by Oswald et al. [[4]](#4). This algorithm is based on gradient descent but uses
-an interative curvature correction $x_i \leftarrow (b_l I- XX^\top)x_i$ for all
+an interative curvature correction $x_i \leftarrow (d_l I- XX^\top)x_i$ for all
 inputs $x_i$. Experiments have shown that GD++ outperforms plain gradient
 descent on the linear regression setup and describes the behavior of trained
 Transformers very well [[4]](#4).
@@ -396,7 +395,7 @@ accordingly. Note that this result covers a wide range of activation functions.
 For linear attention modules, i.e. the euclidean inner product kernel
 $\mathcal{K}^{\text{linear}}(u,w) = \langle u, w\rangle$, this result has
 already been discovered by Ahn et al. [[3]](#3) and corresponds to setting $A_l
-= \eta_l I_d$ in (4). Nevertheless, there is problem with result (6): It does
+= \eta_l I_d$ in (4). Nevertheless, there is a problem with result (6): It does
 not hold for ReLU and softmax activations because $\tilde{h}^{\text{ReLU}},
 \tilde{h}^{\text{smax}}$ are not kernels. Since softmax is the most common
 activation function in practice, we will now explain how to work with it anyway.
@@ -534,28 +533,24 @@ exception, all shown results are based on the sparsity constraints:
 $$
 \begin{align*}
 V_l = \begin{pmatrix}
-V_l & 0\\
+0_{d \times d} & 0\\
 0 & v_l
 \end{pmatrix}, \quad
 Q_l := \begin{pmatrix}
-B_l & 0\\
+C_l & 0\\
 0 & 0
 \end{pmatrix}, \quad
 K_l := \begin{pmatrix}
-C_l & 0\\
+B_l & 0\\
 0 & 0
 \end{pmatrix}
-\end{align*}
-\quad
-\text{where}
-\quad
-V_l =0_{d \times d}.
+\end{align*}.
 $$
 
 Intuitively, this ensures that the key and query matrix do not put any attention
 on the unseen label $y^{(n+1)}$ and the value matrix maps only the prediction
 $y_{\text{pred}}^{(n+1)}$. However, in practice, $V_l$ is often a multiple of
-$I_d$ [[5]](5) and for linear activations correponds to the setup as in (5).
+$I_{d+1}$ [[5]](5) and for linear activations correponds to the setup as in (5).
 
 To conclude, Transformers can learn to implement preconditioned and functional
 gradient descent in its forward pass, enabling them to learn (non-)linear
