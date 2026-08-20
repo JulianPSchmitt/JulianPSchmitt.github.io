@@ -3,6 +3,13 @@ layout: single
 title:  "An Explanation of In-Context Learning"
 date:   2024-06-27 10:25:14 +0200
 categories: jekyll update
+excerpt: >-
+  This post surveys theoretical explanations of in-context learning based on
+  Transformers implementing optimization algorithms in their forward pass. It
+  reviews how linear attention can realize preconditioned gradient descent for
+  linear regression and how nonlinear, kernel-based attention generalizes this
+  mechanism to functional gradient descent, together with the underlying
+  assumptions and limitations.
 mathjax: true
 # usemathjax: true
 ---

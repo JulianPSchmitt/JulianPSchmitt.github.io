@@ -1,6 +1,15 @@
 <!-- start custom footer snippets -->
 
 <!-- Support for MathJax -->
+{% if page.mathjax %}
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: {'[+]': [['$', '$']]}
+    }
+  };
+</script>
+{% endif %}
 <script id="MathJax-script" defer src="https://cdn.jsdelivr.net/npm/mathjax@4.0.0/tex-mml-chtml.js"></script>
 
 <!-- end custom footer snippets -->

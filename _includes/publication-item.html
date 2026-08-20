@@ -1,0 +1,10 @@
+<article class="publication-item" itemscope itemtype="http://schema.org/ScholarlyArticle">
+  <h3 itemprop="headline">
+    <a href="{{ post.paperurl }}">{{ post.title }}</a>
+  </h3>
+  {% capture highlighted_author %}<span class="publication-item__me">{{ site.author.name }}</span>{% endcapture %}
+  <p class="publication-item__authors" itemprop="author">{{ post.authors | replace: site.author.name, highlighted_author }}</p>
+  <p class="publication-item__venue">
+    <i>{{ post.venue }}</i>, {{ post.date | date: "%Y" }}
+  </p>
+</article>

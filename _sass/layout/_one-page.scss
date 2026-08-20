@@ -1,0 +1,144 @@
+html {
+  scroll-behavior: smooth;
+}
+
+.one-page__section {
+  margin-top: 2.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--global-border-color);
+  scroll-margin-top: 5.5rem;
+}
+
+.one-page__section--first {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.one-page__section > h1,
+.one-page__section > h2 {
+  margin-top: 0;
+  font-size: $type-size-4;
+}
+
+.about-logos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: center;
+  gap: 0.35rem;
+  width: min(100%, 46rem);
+  margin: 1.5rem auto 0;
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    height: 3.25rem;
+    padding: 0.25rem;
+
+    &:hover {
+      text-decoration: none;
+
+      img {
+        box-shadow: none;
+      }
+    }
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.about-logos__dlr {
+  transform: scale(1.18);
+}
+
+html[data-theme="dark"] .about-logos__dlr {
+  filter: invert(1);
+}
+
+.one-page__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.one-page__list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--global-dark-border-color);
+  border-radius: 0.5rem;
+  background: var(--global-bg-color);
+}
+
+.one-page__list-item h3,
+.one-page__list-item p {
+  margin: 0;
+}
+
+.one-page__list-item p {
+  margin-top: 0.25rem;
+  color: var(--global-text-color-light);
+}
+
+.one-page__badge {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--global-dark-border-color);
+  border-radius: 999px;
+  color: var(--global-text-color);
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+
+.publication-item {
+  margin-bottom: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--global-dark-border-color);
+  border-radius: 0.5rem;
+  background: var(--global-bg-color);
+}
+
+.publication-item h3,
+.publication-item p {
+  margin: 0;
+}
+
+.publication-item__authors {
+  margin-top: 0.45rem !important;
+}
+
+.publication-item__me {
+  text-decoration: underline;
+}
+
+.publication-item__venue {
+  margin-top: 0.2rem !important;
+  color: var(--global-text-color);
+}
+
+#blog-posts .archive__item-title {
+  margin-top: 0;
+  font-size: $type-size-5;
+}
+
+@media (max-width: 600px) {
+  .one-page__list-item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

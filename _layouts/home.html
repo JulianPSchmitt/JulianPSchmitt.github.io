@@ -1,0 +1,56 @@
+---
+layout: default
+---
+
+<div id="main" role="main">
+  {% include sidebar.html %}
+
+  <main class="archive one-page">
+    <section id="about" class="one-page__section one-page__section--first" aria-labelledby="about-heading">
+      <h1 id="about-heading" class="page__title">{{ page.title }}</h1>
+      {{ content }}
+
+      <nav class="about-logos" aria-label="Affiliated organizations">
+        <a href="https://www.tum.de/en/" aria-label="Technical University of Munich">
+          <img src="{{ base_path }}/images/logos/tum.svg" alt="TUM">
+        </a>
+        <a href="https://www.epfl.ch/en/" aria-label="EPFL">
+          <img src="{{ base_path }}/images/logos/epfl.svg" alt="EPFL">
+        </a>
+        <a href="https://www.dlr.de/en/" aria-label="German Aerospace Center">
+          <img class="about-logos__dlr" src="{{ base_path }}/images/logos/dlr.svg" alt="DLR">
+        </a>
+        <a href="https://www.sap.com/" aria-label="SAP">
+          <img src="{{ base_path }}/images/logos/sap.svg" alt="SAP">
+        </a>
+      </nav>
+    </section>
+
+    <section id="publications" class="one-page__section" aria-labelledby="publications-heading">
+      <h2 id="publications-heading">Publications</h2>
+      {% for post in site.publications reversed %}
+        {% include publication-item.html %}
+      {% endfor %}
+    </section>
+
+    <section id="teaching" class="one-page__section" aria-labelledby="teaching-heading">
+      <h2 id="teaching-heading">Teaching</h2>
+      <div class="one-page__list">
+      {% assign homepage_teaching = site.teaching | where: "homepage", true | sort: "title" %}
+      {% for post in homepage_teaching %}
+          <article class="one-page__list-item">
+            <h3>{{ post.title }}</h3>
+            <span class="one-page__badge">{{ post.term }}</span>
+          </article>
+      {% endfor %}
+      </div>
+    </section>
+
+    <section id="blog-posts" class="one-page__section" aria-labelledby="blog-posts-heading">
+      <h2 id="blog-posts-heading">Blog Posts</h2>
+      {% for post in site.posts %}
+        {% include archive-single.html %}
+      {% endfor %}
+    </section>
+  </main>
+</div>

@@ -13,9 +13,9 @@ $background                 : #474747;
 $background-light           : mix(#fff, $background, 80%);
 $background-lighter         : mix(#fff, $background, 90%);
 $text                       : #ffffff;
-$link                       : #0ea1c5;
-$link-dark                  : mix(#000, $link, 25%);
-$link-light                 : mix(#fff, $link, 25%);
+$link                       : #82b1ea;
+$link-dark                  : #a8c8ef;
+$link-light                 : #82b1ea;
 
 /* Color codes used for the site */
 $danger-color               : #ee5f5b;
@@ -53,4 +53,3 @@ html[data-theme="dark"] {
     --global-text-color-light           : #f3f3f3;
     --global-thead-color                : #{$background-lighter};
 }
-
