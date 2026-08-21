@@ -6,13 +6,16 @@
 
 <div itemscope itemtype="http://schema.org/Person">
 
+  {% comment %}
+  Profile photo hidden for now. Remove this comment block to restore it.
   <div class="author__avatar">
     {% if author.avatar contains "://" %}
-    	<img src="{{ author.avatar }}" alt="{{ author.name }}"  fetchpriority="high" />
+	<img src="{{ author.avatar }}" alt="{{ author.name }}"  fetchpriority="high" />
     {% else %}
-    	<img src="{{ author.avatar | prepend: "/images/" | prepend: base_path }}" class="author__avatar" alt="{{ author.name }}"  fetchpriority="high" />
+	<img src="{{ author.avatar | prepend: "/images/" | prepend: base_path }}" class="author__avatar" alt="{{ author.name }}"  fetchpriority="high" />
     {% endif %}
   </div>
+  {% endcomment %}
 
   <div class="author__content">
     <h3 class="author__name">{{ author.name }}</h3>

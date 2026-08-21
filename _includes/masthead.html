@@ -5,9 +5,12 @@
       <nav id="site-nav" class="greedy-nav">
         <button><span class="navicon"></span></button>
         <ul class="visible-links">
+          {% comment %}
+          Site-title button hidden for now. Remove this comment block to restore it.
           <li class="masthead__menu-item masthead__menu-item--lg persist {% if page.url == '/' or page.url == '/index.html' %}selected{% endif %}">
             <a href="{{ base_path }}/">{{ site.title }}</a>
           </li>
+          {% endcomment %}
           {% for link in site.data.navigation.main %}
             {% if link.url contains 'http' %}
               {% assign domain = '' %}
