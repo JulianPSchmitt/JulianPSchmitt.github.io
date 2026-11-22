@@ -15,13 +15,13 @@ Cremers](https://cvg.cit.tum.de/members/cremers). My research focuses on visual
 perception and geometric understanding of the physical world, particularly 3D/4D
 reconstruction and scene understanding.
 
-Previously, I received my Master's degree in Mathematics from TUM, where I wrote
-my thesis on self-supervised Visual SLAM under Prof. Daniel Cremers. During my
-Master's, I spent a semester as a visiting student at EPFL, working with [Prof.
-Lénaïc Chizat](https://lchizat.github.io/) and [Prof. Laura
-Grigori](https://www.psi.ch/de/lsm/people/laura-grigori).  Before
-that, I completed my Bachelor's degree in Mathematics at TUM under the
-supervision of [Prof. Andreas S.
+Previously, I completed my Master's degree in Mathematics at TUM, with a thesis
+on self-supervised visual SLAM advised by Prof. Daniel Cremers. During my
+studies, I spent a semester at EPFL as a visiting student, working on analytical
+machine learning with [Prof. Lénaïc Chizat](https://lchizat.github.io/). Prior
+to my Master's, I obtained my Bachelor's degree in Mathematics from TUM,
+specializing in discrete optimization and writing my thesis on scheduling
+algorithms with [Prof. Andreas S.
 Schulz](https://www.ot.mgt.tum.de/en/or/group/andreas-s-schulz/).
 
 Alongside my studies, I worked as a student researcher at the German Aerospace
